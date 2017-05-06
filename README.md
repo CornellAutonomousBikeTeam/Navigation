@@ -1,6 +1,9 @@
 # Navigation
 Repo for the nav code- .gitignore only has python
 
+## Documentation
+* [bikeSim.py](#bikeSim)
+
 ### <a name="bikeSim"></a> bikeSim.py
 
 ---
@@ -18,7 +21,7 @@ Repo for the nav code- .gitignore only has python
 
 
 ---
-### <a name="geometry"></a> gemoetry.py
+### <a name="geometry"></a> geometry.py
 
 
 ---
@@ -26,10 +29,7 @@ Repo for the nav code- .gitignore only has python
 
 
 ---
-### <a name="map_node"></a> map_node.py
 
-
----
 ### <a name="mapModel"></a> mapModel.py
 
 
@@ -38,11 +38,15 @@ Repo for the nav code- .gitignore only has python
 
 
 ---
+### <a name="requestHandler"></a> requestHandler.py
+
+
+---
 ### <a name="navigation_node"></a> navigation_node.py
 
 
 ---
-### <a name="requestHandler"></a> requestHandler.py
+### <a name="map_node"></a> map_node.py
 
 
 ---
