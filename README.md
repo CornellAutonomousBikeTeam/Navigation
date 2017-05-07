@@ -1,6 +1,18 @@
-# Navigation
+# Navigation- UNSTABLE
+Master branch should have stable code only. If unstable, write unstable at the top.
 Repo for the nav code- .gitignore only has python
 
+ ## Known Bugs
+  - [ ] Divide by 0 errors in geometry.py methods
+  - [ ] Verify all return types using python's .dtype() method
+ 
+ ## Last commited by
+ > Kenneth Fang
+ 
+ ## Reason for commit
+> Working on documentation for the code embedded in the README.md, and removing some repeat/useless cde.
+
+---
 ## Documentation
 * [bikeSim.py](#bikeSim)
 * [bikeState.py](#bikeState)
@@ -14,6 +26,8 @@ Repo for the nav code- .gitignore only has python
 * [map_node.py](#map_node)
 * [simulator_node.py](#simulator_node)
 * [vis_node.py](#vis_node)
+
+All files with _node are used for ROS communication.
 
 ### <a name="bikeSim"></a> bikeSim.py
 Module that simulates the bikes dynamics.
@@ -32,7 +46,7 @@ Defines the Bike object which represents the autonomous bike for the purposes of
 Class Definition:
 
   <details>
-    <summary><small>Bike_State.h-Click to Expand</small></summary><p>
+    <summary><small>bikeState.py-Click to Expand</small></summary><p>
     import numpy as np
 		from constants import *
 		""" This module contains a class to represent the bike's state """
@@ -93,18 +107,26 @@ Class Definition:
 				# Returns u which is the motor command and the zdot vector in the form of a list
 				return (u, [xdot, ydot, phi_dot, psi_dot, delta_dot, wr_dot, v_dot])
   </p></details>
+  
+  Methods:
+
+Return Type | Method Signature | Description
+:-------------: |:-------------:| :-----:
+void | init_paths(self, waypoints) | Initializes paths fron input waypoints
+void | add_path(self, p1, p2) | Adds a new path from point p1 to point p2 at the end of the path list
+void | add_point(self, p) | Adds a new point p to the list of waypoints. If it is not the first point, appends a new path
+void | close_path(self)| Adds a path from the last point to the first point in the waypoints list
+void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circle with given characteristics
+
 
 ---
 
 ### <a name="constants"></a> constants.py
 Definitions of various constants for Navigation code.
 
-Constant Name | Significance | Usage
+Constant Names | Significance | Used In
 :-------------: |:-------------:| :-----:
-G | | 
-L | |
-B | | 
-H | |
+G, L, B, H | Constants from the Matlab bike dynamics simulation | bikeSim.py
 C | |
 K1 | |
 K2 | |
@@ -135,11 +157,190 @@ float? | angle_between_two_lines(line1, line2) | Returns: angle between [line1] 
 float? | dot_product(v1, v2) | Returns: mathematical dot product of vectors [v1] and [v2]
 ---
 ### <a name="loop"></a> loop.py
+Main Navigation file. Runs a loop that gets navigation command, passes it thorugh simulation, and gets the new updated state.
+
+Main loop:
+
+  <details>
+    <summary><small>loop.py-Click to Expand</small></summary><p>
+		
+		
+		
+		
+		import nav
+		import mapModel
+		import math
+		import bikeState
+		import bikeSim
+		from constants import *
+		import geometry
+		import requestHandler
+
+		import matplotlib
+		from matplotlib import pyplot as plt
+		from matplotlib import animation
+		from matplotlib import collections  as mc
+
+		def main_loop(nav, bike):
+			""" This is the main loop that gets the nav command, passes it through bike dynamics
+			to get the updated state and plots the new state """
+			k = 0 
+			steerD = 0
+			iters = 0
+
+			while (k < 2000):
+
+				#plotting
+				plt.scatter(bike.xB, bike.yB)
+				plt.show()
+				plt.pause(0.0000001)
+
+				# Steer vs Time
+				# plt.scatter((k+1)*TIMESTEP, bike.delta)
+				# plt.show()
+				# plt.pause(0.00001)
+
+				# if (nav.close_enough()):
+				# 	steerD = nav.controller_direction_to_turn() #pd cotnroller takes over
+				# 	print "pd Controller takes over"
+				# else:
+				# 	steerD = nav.direction_to_turn()
+				# # 	steerD = steerD * MAX_STEER * (-1)
+				# if iters == 85:
+				# 	iters = 0
+				# 	steerD = nav.controller_direction_to_turn()
+				# iters+=1
+				print "STEER D IS", steerD
+				# steerD = nav.controller_direction_to_turn() #pd cotnroller takes over
+				steerD = nav.controller_direction_to_turn()
+				# print steerD
+				# if new state has new target path then recalculate delta
+				bike.update(bikeSim.new_state(bike, steerD))
+				# if k == 20:
+				# 	print "HELLOOOO", nav.calc_overshoot()
+					# print "HELLOOOO", nav.calc_overshoot()
+				# path_angle = geometry.line_angle(nav.map_model.paths[nav.target_path])
+				# bike_angle = nav.map_model.bike.pi
+
+				# print "ANGLE BETWEEN", math.fabs(path_angle - bike_angle)
+
+				k = k + 1
+
+				# When it crosses the line... ?
 
 
+		if __name__ == '__main__':
+			
+			new_bike = bikeState.Bike(0, 0, 0.1, 0, math.pi/6.0, 0, 3.57)
+			# waypoints = requestHandler.parse_json(True)
+			# waypoints = [(0,0), (20, 5), (40, 5)]
+			waypoints = [(0,0), (50, 5)]
+			new_map_model = mapModel.Map_Model(new_bike, waypoints, [], [])
+			new_nav = nav.Nav(new_map_model)
+			print "PATHS", new_nav.map_model.paths
+			# print new_nav.direction_to_turn()
+			# print new_bike.rhs(new_nav.direction_to_turn())
+			# PLOTTING
+			plt.ion() # enables interactive plotting
+			paths = new_map_model.paths
+			fig = plt.figure()
+			fig.set_dpi(100) #dots per inch
+		 	ax = plt.axes(xlim=(0, 20), ylim=(0, 20)) 
+		 	lc = mc.LineCollection(paths, linewidths=2, color = "black")
+			ax.add_collection(lc)
+			plt.show() 
+			main_loop(new_nav, new_bike)
+</p></details>
+			
 ---
 
 ### <a name="mapModel"></a> mapModel.py
+Virtual model of the map in which the simulated bike is navigating. Every Route is made up of paths, which are lines between two points.
+
+
+Class Definition:
+
+  <details>
+    <summary><small>bikeState.py-Click to Expand</small></summary><p>
+import bikeState
+		import numpy as np
+		""" This module contains a class to represent the Map Model and all its functions """
+
+		
+		
+		class Map_Model(object):
+
+
+			def __init__(self, bike, waypoints, obstacles, paths = []):
+				""" Initializes the Map Model """
+				self.bike = bike
+				self.paths = self.init_paths(waypoints)
+				self.waypoints = waypoints
+				self.obstacles = obstacles
+
+			def init_paths(self, waypoints):
+				""" Initializes paths fron input waypoints """
+				paths = []
+				if len(waypoints) < 2:
+					return paths
+				else:
+					for i in range(1, len(waypoints)):
+						paths.append((waypoints[i-1], waypoints[i]))
+					return paths
+
+			def add_path(self, p1, p2):
+				""" Adds a new path from point p1 to point p2 at the end of the path list """
+				self.paths.append([p1,p2])
+				self.waypoints[0].append(p1[0])
+				self.waypoints[0].append(p2[0])
+				self.waypoints[1].append(p1[1])
+				self.waypoints[1].append(p2[1])
+
+
+			def add_point(self, p):
+				""" Adds a new point p to the list of waypoints. If it is not the first point added in 
+				the waypoints list, then a path is also added from the last point in waypoints to the 
+				new point p that we add """
+				if (len(self.paths) != 0):
+					previous_point = self.paths[-1][1]
+					self.paths.append([previous_point, p])
+				elif (len(self.waypoints[0])==1):
+					#If the first point had been added we create the first path from the first point to p
+					self.paths.append([(self.waypoints[0][0], self.waypoints[1][0]), p])
+				self.waypoints[0].append(p[0])
+				self.waypoints[1].append(p[1])
+
+
+			def close_path(self):
+				""" Adds a path from the last point to the first point in the waypoints list """
+				self.add_point(self.paths[0][0])
+
+
+			def draw_circle(self, center, r, n_points, degrees = 2*np.pi):
+				""" Draws a circle with given characteristics """
+				deg_inc = float(degrees)/n_points
+				theta = deg_inc
+				p0 = np.array(center) + np.array([r, 0])
+				p1 = np.array(center) + np.array([r*np.cos(theta), r*np.sin(theta)])
+				self.add_path(p0, p1)
+				for i in range(2, n_points+1):
+					next_point = np.array(center) + np.array([r*np.cos(i*theta), r*np.sin(i*theta)])
+					self.add_point(next_point)
+
+
+  </p></details>
+
+Methods:
+
+Return Type | Method Signature | Description
+:-------------: |:-------------:| :-----:
+void | init_paths(self, waypoints) | Initializes paths fron input waypoints
+void | add_path(self, p1, p2) | Adds a new path from point p1 to point p2 at the end of the path list
+void | add_point(self, p) | Adds a new point p to the list of waypoints. If it is not the first point, appends a new path
+void | close_path(self)| Adds a path from the last point to the first point in the waypoints list
+void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circle with given characteristics
+
+
 
 
 ---
