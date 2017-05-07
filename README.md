@@ -108,21 +108,16 @@ Class Definition:
 				return (u, [xdot, ydot, phi_dot, psi_dot, delta_dot, wr_dot, v_dot])
   </p></details>
   
-  Methods:
+  Methods: //TODO
 
 Return Type | Method Signature | Description
 :-------------: |:-------------:| :-----:
-void | init_paths(self, waypoints) | Initializes paths fron input waypoints
-void | add_path(self, p1, p2) | Adds a new path from point p1 to point p2 at the end of the path list
-void | add_point(self, p) | Adds a new point p to the list of waypoints. If it is not the first point, appends a new path
-void | close_path(self)| Adds a path from the last point to the first point in the waypoints list
-void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circle with given characteristics
 
 
 ---
 
 ### <a name="constants"></a> constants.py
-Definitions of various constants for Navigation code.
+Definitions of various constants for Navigation code. //TODO
 
 Constant Names | Significance | Used In
 :-------------: |:-------------:| :-----:
