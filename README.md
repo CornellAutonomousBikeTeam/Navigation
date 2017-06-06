@@ -340,22 +340,6 @@ void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circl
 
 ---
 ### <a name="nav"></a> nav.py
-//TODO
-Methods:
-
-Return Type | Method Signature | Description
-:-------------: |:-------------:| :-----:
-void | init_paths(self, waypoints) | Initializes paths fron input waypoints
-void | add_path(self, p1, p2) | Adds a new path from point p1 to point p2 at the end of the path list
-void | add_point(self, p) | Adds a new point p to the list of waypoints. If it is not the first point, appends a new path
-void | close_path(self)| Adds a path from the last point to the first point in the waypoints list
-void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circle with given characteristics
-
-
----
-### <a name="requestHandler"></a> requestHandler.py
-File that handles obtaining GPS waypoints from website. Users can submit waypoints on a Google Maps model on the website, and this file makes requests to the website to obtain those waypoints.
-
 Methods:
 
 Return Type | Method Signature | Description
@@ -366,6 +350,19 @@ void | displacement_to_turn(self, b = None, target_path = None) |Returns: the de
 void | turn_parallel(self)| Calls turn_helper to turn parallel to the desired path
 void | turn_perp(self)| Calls turn_helper to turn perpindicular to the desired path
 int? | turn_helper(self, path_vector) | returns 1, 0, or -1 depending on which direction to turn //TODO idk what means what
+
+
+---
+### <a name="requestHandler"></a> requestHandler.py
+File that handles obtaining GPS waypoints from website. Users can submit waypoints on a Google Maps model on the website, and this file makes requests to the website to obtain those waypoints.
+
+Methods: //TODO
+
+Return Type | Method Signature | Description
+:-------------: |:-------------:| :-----:
+array? | math_convert(latitude, longitude) | Converts latitude and longitude to local coordinates that bike can use to navigate.
+void | bearing_from_origin(origin, latitude, longitude)| potato
+void | parse_json(presets=False) | Parses JSON response from http request
 
 
 ---
