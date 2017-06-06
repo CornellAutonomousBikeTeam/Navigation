@@ -27,7 +27,7 @@ Repo for the nav code- .gitignore only has python
 * [simulator_node.py](#simulator_node)
 * [vis_node.py](#vis_node)
 
-All files with _node are used for ROS communication.
+All files with "_node" are used for ROS communication.
 
 ### <a name="bikeSim"></a> bikeSim.py
 Module that simulates the bikes dynamics.
@@ -340,10 +340,32 @@ void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circl
 
 ---
 ### <a name="nav"></a> nav.py
+//TODO
+Methods:
+
+Return Type | Method Signature | Description
+:-------------: |:-------------:| :-----:
+void | init_paths(self, waypoints) | Initializes paths fron input waypoints
+void | add_path(self, p1, p2) | Adds a new path from point p1 to point p2 at the end of the path list
+void | add_point(self, p) | Adds a new point p to the list of waypoints. If it is not the first point, appends a new path
+void | close_path(self)| Adds a path from the last point to the first point in the waypoints list
+void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circle with given characteristics
 
 
 ---
 ### <a name="requestHandler"></a> requestHandler.py
+File that handles obtaining GPS waypoints from website. Users can submit waypoints on a Google Maps model on the website, and this file makes requests to the website to obtain those waypoints.
+
+Methods:
+
+Return Type | Method Signature | Description
+:-------------: |:-------------:| :-----:
+void | direction_to_turn(self) | Decides whether to turn perpindicular or parallel, and calls the corresponding method
+void | find_closest_path(self) | Returns the nearest path's index in the whole route //TODO confirm w/ Foteini
+void | displacement_to_turn(self, b = None, target_path = None) |Returns: the delta which represents the distance at which the bike should enter the s curve based on its turning radius
+void | turn_parallel(self)| Calls turn_helper to turn parallel to the desired path
+void | turn_perp(self)| Calls turn_helper to turn perpindicular to the desired path
+int? | turn_helper(self, path_vector) | returns 1, 0, or -1 depending on which direction to turn //TODO idk what means what
 
 
 ---
