@@ -128,7 +128,19 @@ K2 | |
 K3 | |
 TIMESTEP | |
 PAUSE | | 
-MAX_Steer| |
+MAX_Steer| Bike's maximumum steer angle, used in clamping steerD | nav.py
+PID_DIST_GAIN | | nav.py
+PID_ANGLE_GAIN | | nav.py
+RAD_TO_DEG | Ratio of degrees to radians to degrees | nav.py
+TURN_LOOKAHEAD_DIST | | nav.py
+NEXT_TURN_GAIN | | nav.py
+BIKE_LENGTH | | nav.py
+QUINTIC_LOOKAHEAD | | nav.py
+QUINTIC_SAMPLE_LENGTH | | nav.py
+BASE_LOOKAHEAD | | nav.py
+LOOKAHEAD_ANGLE_GAIN| | nav.py
+MIN_TURN_RADIUS| Bike's minimum turning radius, determined using MAX_STEER | nav.py
+ANIM_INTERVAL| Miliseconds between blit frames | loop.py
 
 ---
 ### <a name="geometry"></a> geometry.py
