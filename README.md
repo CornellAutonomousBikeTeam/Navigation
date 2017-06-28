@@ -132,11 +132,11 @@ MAX_Steer| |
 
 ---
 ### <a name="geometry"></a> geometry.py
-Module that contains many convenience methods that perform mathematical calculations. Used in __
+Module that contains many convenience functions that perform mathematical calculations. Used in __
 
-Methods:
+Functions:
 
-Return Type | Method Signature | Description
+Return Type | Function Signature | Description
 :-------------: |:-------------:| :-----:
 array? | unit_vector(p1, p2) |  Returns: the unit vector given 2D points [p1] and [p2]
 array? | threeD_unit_vector(p1, p2) | Returns: the unit vector given points [p1] and [p2]
@@ -382,3 +382,18 @@ void | parse_json(presets=False) | Parses JSON response from http request
 
 ---
 ### <a name="vis_node"></a> vis_node.py
+
+---
+### <a name="gps_assisted_simulator_node"></a> gps_assisted_simulator_node.py
+This file is simply simulator_node.py, but it reads from the GPS ROS stream and updates its internal state based on that.
+
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+void | update_bike_from_gps(data) | Takes the incoming daata from the GPS and updates our state with it
+void | update_graph(data) | 
+void | path_parse(data) |
+void | listener() |
+
+
