@@ -344,12 +344,13 @@ Methods:
 
 Return Type | Method Signature | Description
 :-------------: |:-------------:| :-----:
-void | direction_to_turn(self) | Decides whether to turn perpindicular or parallel, and calls the corresponding method
-void | find_closest_path(self) | Returns the nearest path's index in the whole route //TODO confirm w/ Foteini
-void | displacement_to_turn(self, b = None, target_path = None) |Returns: the delta which represents the distance at which the bike should enter the s curve based on its turning radius
-void | turn_parallel(self)| Calls turn_helper to turn parallel to the desired path
-void | turn_perp(self)| Calls turn_helper to turn perpindicular to the desired path
-int? | turn_helper(self, path_vector) | returns 1, 0, or -1 depending on which direction to turn //TODO idk what means what
+void | clamp_steer_angle(self, steerD) | Limits a steer angle to within [-MAX_STEER, +MAX_STEER]
+int? | find_closest_path(self, point) | Returns the index of the nearest path to the given point from the list of paths (stored in self.map_model.paths)
+float? | pid_controller(self) | Returns a desired steering angle for the bike. Two parts: a regular PID controller, and a component that detects when a turn is coming up so we can start turning early
+float? | create_lookahead_correction(self, current_path, bike)| Looks at the path ahead and returns a steering angle correction
+float? | quintic_steering_angle(self, dist_error, angle_error, curvature_error, L, s)| Returns the y-coordinate of the quintic polynomial given s as the x-coordinate
+float? | quintic(self) | Returns a desired steering angle for the bike based on quintic algorithm
+float? | get_steering_angle(self) | Calls another function to calculate the steering angle. This function is part of the external interface of this class. All external users of this class should call this method instead of the other steering-angle-calculation methods.
 
 
 ---
