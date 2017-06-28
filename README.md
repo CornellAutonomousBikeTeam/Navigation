@@ -22,6 +22,7 @@ Repo for the nav code- .gitignore only has python
 * [mapModel.py](#mapModel)
 * [nav.py](#nav)
 * [requestHandler.py](#requestHandler)
+* [gps_assisted_simulator_node.py](#gps_assisted_simulator_node)
 * [navigation_node.py](#navigation_node)
 * [map_node.py](#map_node)
 * [simulator_node.py](#simulator_node)
@@ -112,6 +113,9 @@ Class Definition:
 
 Return Type | Method Signature | Description
 :-------------: |:-------------:| :-----:
+array? | vector(self) | Returns the bike's unit vector
+void | update(self, bike) | Updates the bike state
+ | rhs(self, steerD) | Modifies state object to turn it into the next state using bike dynamics. Equivalent to rhs in Matlab
 
 
 ---
@@ -381,21 +385,6 @@ void | parse_json(presets=False) | Parses JSON response from http request
 
 
 ---
-### <a name="navigation_node"></a> navigation_node.py
-
-
----
-### <a name="map_node"></a> map_node.py
-
-
----
-### <a name="simulator_node"></a> simulator_node.py
-
-
----
-### <a name="vis_node"></a> vis_node.py
-
----
 ### <a name="gps_assisted_simulator_node"></a> gps_assisted_simulator_node.py
 This file is simply simulator_node.py, but it reads from the GPS ROS stream and updates its internal state based on that.
 
@@ -409,3 +398,17 @@ void | path_parse(data) |
 void | listener() |
 
 
+---
+### <a name="navigation_node"></a> navigation_node.py
+
+
+---
+### <a name="map_node"></a> map_node.py
+
+
+---
+### <a name="simulator_node"></a> simulator_node.py
+
+
+---
+### <a name="vis_node"></a> vis_node.py
