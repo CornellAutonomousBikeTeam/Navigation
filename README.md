@@ -115,7 +115,7 @@ Return Type | Method Signature | Description
 :-------------: |:-------------:| :-----:
 array? | vector(self) | Returns the bike's unit vector
 void | update(self, bike) | Updates the bike state
- | rhs(self, steerD) | Modifies state object to turn it into the next state using bike dynamics. Equivalent to rhs in Matlab
+array? | rhs(self, steerD) | Modifies state object to turn it into the next state using bike dynamics. Equivalent to rhs in Matlab
 
 
 ---
@@ -375,10 +375,14 @@ float? | get_steering_angle(self) | Calls another function to calculate the stee
 ### <a name="requestHandler"></a> requestHandler.py
 File that handles obtaining GPS waypoints from website. Users can submit waypoints on a Google Maps model on the website, and this file makes requests to the website to obtain those waypoints.
 
-Methods: //TODO
+Team members can sign in and submit waypoints at: https://abserver-168813.appspot.com
 
-Return Type | Method Signature | Description
+Functions: //TODO
+
+Return Type | Function Signature | Description
 :-------------: |:-------------:| :-----:
+array? | convert(latitude, longitude) | Mercator map projection
+array? | convert2(latitude, longitude) | 
 array? | math_convert(latitude, longitude) | Converts latitude and longitude to local coordinates that bike can use to navigate.
 void | bearing_from_origin(origin, latitude, longitude)| potato
 void | parse_json(presets=False) | Parses JSON response from http request
