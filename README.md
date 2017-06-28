@@ -340,6 +340,8 @@ void | draw_circle(self, center, r, n_points, degrees = 2*np.pi) | Draws a circl
 
 ---
 ### <a name="nav"></a> nav.py
+Navigation algorithms. Contains methods that return the desired steering angle given a bike state and list of paths.
+
 Methods:
 
 Return Type | Method Signature | Description
