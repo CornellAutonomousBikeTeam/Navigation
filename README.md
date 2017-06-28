@@ -262,6 +262,16 @@ Main loop:
 			plt.show() 
 			main_loop(new_nav, new_bike)
 </p></details>
+
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+void | loop_pyqtgraph(nav, bike, map_model) | Animation using PyQtGraph
+void | loop_matplotlib(nav, bike, map_model) | Animation using Matplotlib with adding/removing patches
+void | loop_matplotlib_blitting(nav, bike, map_model, blitting=True) | Animation using Matplotlib with blitting and callbacks
+dict? | find_display_bounds(waypoints) | Given a set of waypoints, return {xlim, ylim} that can fit them on a graph
+
 			
 ---
 
