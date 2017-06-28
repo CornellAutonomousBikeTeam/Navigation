@@ -396,7 +396,7 @@ Functions:
 
 Return Type | Function Signature | Description
 :-------------: |:-------------:| :-----:
-void | update_bike_from_gps(data) | Takes the incoming daata from the GPS and updates our state with it
+void | update_bike_from_gps(data) | Takes the incoming data from the GPS and updates our state with it
 void | update_graph(data) | 
 void | path_parse(data) |
 void | listener() |
@@ -405,14 +405,47 @@ void | listener() |
 ---
 ### <a name="navigation_node"></a> navigation_node.py
 
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+void | callback(data) | 
+void | path_parse(data) |
+void | update_bike_state(data) |
+void | update_bike_xy(data) |
+void | keyboard_update(data) |
+void | talker() |
+
 
 ---
 ### <a name="map_node"></a> map_node.py
+
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+array? | setup_dimension() | 
+void | map_server() |
 
 
 ---
 ### <a name="simulator_node"></a> simulator_node.py
 
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+void | update_graph(data) |
+void | path_parse(data) |
+void | listener() | 
 
 ---
 ### <a name="vis_node"></a> vis_node.py
+
+Functions:
+
+Return Type | Function Signature | Description
+:-------------: |:-------------:| :-----:
+void | update_graph(data) |
+void | path_parse(data) |
+void | listener() | 
