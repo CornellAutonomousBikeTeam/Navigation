@@ -46,6 +46,16 @@ Defines the Bike object which represents the autonomous bike for the purposes of
 
 Class Definition:
 
+Type | Instance Attribute | Description
+:-------------: |:-------------:| :-----:
+float | xB | Bike position's x-coordinate
+float | yB | Bike position's y-coordinate
+float | phi | Lean angle (radians)
+float | psi | Direction/heading/yaw (radians)
+float | delta | Steer angle (radians)
+float | w_r | Lean rate (m/s)
+float | v | Speed (m/s)
+
   <details>
     <summary><small>bikeState.py-Click to Expand</small></summary><p>
     import numpy as np
@@ -280,6 +290,14 @@ Virtual model of the map in which the simulated bike is navigating. Every Route 
 
 
 Class Definition:
+
+Type | Instance Attribute | Description
+:-------------: |:-------------:| :-----:
+Bike | bike | Bike object
+array | paths | Array of path segments. Each element is an array of 2 waypoints that make up a path segment.
+array | waypoints | Waypoints that make up the route
+array? | obstacles | Obstacles on the map?
+
 
   <details>
     <summary><small>bikeState.py-Click to Expand</small></summary><p>
