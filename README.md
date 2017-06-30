@@ -2,6 +2,11 @@
 Master branch should have stable code only. If unstable, write unstable at the top.
 Repo for the nav code- .gitignore only has python
 
+**nav.py** contains the navigation algorithms with steering angle as output.  
+Run **loop.py** to see simulation.  
+
+All files with "_node" are used for ROS communication.  
+
  ## Known Bugs
   - [ ] Divide by 0 errors in geometry.py methods
   - [ ] Verify all return types using python's .dtype() method
