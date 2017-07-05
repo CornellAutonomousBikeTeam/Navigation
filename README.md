@@ -174,23 +174,23 @@ Definitions of various constants for Navigation code. //TODO
 Constant Names | Significance | Used In
 :-------------: |:-------------:| :-----:
 G, L, B, H | Constants from the Matlab bike dynamics simulation | bikeSim.py
-C | |
-K1 | |
-K2 | |
-K3 | |
-TIMESTEP | |
-PAUSE | | 
+C | Trail? | ?
+K1 | Gain from old nav algorithm | Not used
+K2 | Gain from old nav algorithm | Not used
+K3 | Gain from old nav algorithm | Not used
+TIMESTEP | ? | ?
+PAUSE | ? | ?
 MAX_Steer| Bike's maximumum steer angle, used in clamping steerD | nav.py
-PID_DIST_GAIN | | nav.py
-PID_ANGLE_GAIN | | nav.py
-RAD_TO_DEG | Ratio of degrees to radians to degrees | nav.py
-TURN_LOOKAHEAD_DIST | | nav.py
-NEXT_TURN_GAIN | | nav.py
-BIKE_LENGTH | | nav.py
-QUINTIC_LOOKAHEAD | | nav.py
-QUINTIC_SAMPLE_LENGTH | | nav.py
-BASE_LOOKAHEAD | | nav.py
-LOOKAHEAD_ANGLE_GAIN| | nav.py
+PID_DIST_GAIN | Gain used for distance contribution of PID | nav.py
+PID_ANGLE_GAIN | Gain used for angle contribution of PID | Not used
+RAD_TO_DEG | Ratio of radians to degrees | nav.py
+TURN_LOOKAHEAD_DIST | A lookahead distance | Not used
+NEXT_TURN_GAIN | Gain used for next turn contribution of PID| nav.py
+BIKE_LENGTH | Bike length used in quintic | nav.py
+QUINTIC_LOOKAHEAD | Lookahead distance used in quintic | nav.py
+QUINTIC_SAMPLE_LENGTH | Constant used in quintic polynomial | nav.py
+BASE_LOOKAHEAD | ? | Not used
+LOOKAHEAD_ANGLE_GAIN| Gain used for lookahead angle | Not used
 MIN_TURN_RADIUS| Bike's minimum turning radius, determined using MAX_STEER | nav.py
 ANIM_INTERVAL| Miliseconds between blit frames | loop.py
 
