@@ -1,3 +1,7 @@
+# Local files that shouldn't go in source control.
+local/
+
+
 # Vim stuff
 *.swp
 
