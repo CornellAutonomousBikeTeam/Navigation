@@ -304,4 +304,4 @@ class Nav(object):
         All external users of this class should call this method
         instead of the other steering-angle-calculation methods."""
 
-        return self.pid_controller()
+        return 0#self.pid_controller()
