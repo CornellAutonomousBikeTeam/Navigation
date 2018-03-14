@@ -4,14 +4,20 @@ Originally translated from MATLAB. Math used is explained in great detail at:
 https://home.wlu.edu/~levys/kalman_tutorial/
 """
 
+import math
 import numpy as np
 import geometry
+from util.sensor_data import GPSData, BikeData
+from util.math_helpers import align_radians
+
+
+BIKE_LENGTH = 1.0
 
 
 # Runs two concurrent Kalman Filters k1 and k2.
 # k1 state is (x, y, xdot, ydot).
 # k2 state is (yaw, yawdot).
-def kalman_retro(sensors, dt=0.01, speed=1.30, bike_length=1.0):
+def kalman_retro(sensors, dt=0.01):
     # Get start and end time.
     start_time = min(sensors.gps.timestamp[0], sensors.bike.timestamp[0])
     end_time = min(sensors.gps.timestamp[-1], sensors.bike.timestamp[-1])
@@ -29,70 +35,43 @@ def kalman_retro(sensors, dt=0.01, speed=1.30, bike_length=1.0):
     k1_state = np.matrix([[x_init], [y_init], [xdot_init], [ydot_init]])
 
     yaw_init = sensors.bike.yaw[0]
-    yawdot_init = speed * np.tan(sensors.bike.steer[0]) / bike_length
+    yawdot_init = sensors.gps.speed[0] * np.tan(sensors.bike.steer[0]) / BIKE_LENGTH
     k2_state = np.matrix([[yaw_init], [yawdot_init]])
 
     # State estimate covariance matrix.
     k1_P = np.identity(4)
-    k2_P = np.identity(2)
-
-    # Sensor covariance matrix.
-    k1_R = np.matrix([[50, 0, 0, 0], [0, 50, 0, 0], [0,0,0.01,0], [0,0,0,0.01]])
-    k2_R = np.matrix([[2, 0], [0, 0.02]])
-
-    # Hidden state to observed state transformation.
-    k1_C = np.identity(4)
-    k2_C = np.identity(2)
+    k2_P = np.identity(2)    
 
     # Observed values for output.
-    last_observed_x         = None
-    last_observed_y         = None
-    last_observed_yaw       = None
-    last_observed_gps_yaw   = None
-    last_observed_yawdot    = None
-    last_observed_speed     = None
+    last_obs_x         = None
+    last_obs_y         = None
+    last_obs_yaw       = None
+    last_obs_gps_yaw   = None
+    last_obs_yawdot    = None
+    last_obs_speed     = None
 
     raw_output = []
 
     # Run the filters.
-    for t in np.arange(start_time, end_time-dt, dt):
-        # State update matrix.
-        k1_A = np.identity(4)
-        k1_A[0, 2] = dt
-        k1_A[1, 3] = dt
-
-        k2_A = np.identity(2)
-        k2_A[0, 1] = dt
-
-        # Predict new state.
-        # TODO: why do we need to add the identity here?
-        k1_state = k1_A * k1_state
-        k1_P = k1_A * k1_P * k1_A.T + np.identity(4) * dt
-
-        k2_state = k2_A * k2_state
-        k2_P = k2_A * k2_P * k2_A.T + np.identity(2) * dt
+    for t in np.arange(start_time, end_time - dt, dt):
+        gps_sensor = None
+        bike_sensor = None
 
         # Check for sensor data during this timestep.
         if sensors.gps.timestamp[gps_index] < t:
             gps_index += 1
 
-            # Update state using sensor observations.
-            x_observed = sensors.gps.x[gps_index]
-            y_observed = sensors.gps.y[gps_index]
-            yaw_observed = k2_state[0, 0]
-            xdot_observed = sensors.gps.speed[gps_index] * np.cos(yaw_observed)
-            ydot_observed = sensors.gps.speed[gps_index] * np.sin(yaw_observed)
+            gps_sensor = GPSData(
+                x           = sensors.gps.x         [gps_index],
+                y           = sensors.gps.y         [gps_index],
+                yaw         = sensors.gps.yaw       [gps_index],
+                speed       = sensors.gps.speed     [gps_index],
+                timestamp   = sensors.gps.timestamp [gps_index]
+            )
 
-            last_observed_x = x_observed
-            last_observed_y = y_observed
-            last_observed_gps_yaw = sensors.gps.yaw[gps_index]
-
-            k1_z = np.matrix([[x_observed], [y_observed], [xdot_observed], [ydot_observed]])
-
-            # Compute kalman gain.
-            k1_G = k1_P * k1_C.T * (k1_C * k1_P * k1_C.T + k1_R).I
-            k1_state += k1_G * (k1_z - k1_C * k1_state)
-            k1_P = (np.identity(4) - k1_G * k1_C) * k1_P
+            last_obs_x = sensors.gps.x[gps_index]
+            last_obs_y = sensors.gps.y[gps_index]
+            last_obs_gps_yaw = sensors.gps.yaw[gps_index]
 
             # Catch up to most recent sensor measurement.
             while sensors.gps.timestamp[gps_index] < t:
@@ -102,33 +81,25 @@ def kalman_retro(sensors, dt=0.01, speed=1.30, bike_length=1.0):
         if sensors.bike.timestamp[bike_index] < t:
             bike_index += 1
 
-            # Update state using sensor observations.
-            yaw_observed = sensors.bike.yaw[bike_index]
-            speed_observed = sensors.gps.speed[gps_index]
-            yawdot_observed = speed_observed * np.tan(sensors.bike.steer[bike_index]) / bike_length
+            bike_sensor = BikeData(
+                steer       = sensors.bike.steer        [bike_index],
+                yaw         = sensors.gps.yaw[gps_index], # TODO: fix when imu works
+                speed       = sensors.gps.speed[gps_index], # TODO: fix when hall sensor works
+                timestamp   = sensors.bike.timestamp    [bike_index]
+            )
 
-            last_observed_yaw = yaw_observed
-            last_observed_yawdot = yawdot_observed
-            last_observed_speed = speed_observed
-
-            # Wrap yaw around in case we've done a full circle.
-            delta = k2_state[0, 0] - yaw_observed
-            if delta > np.pi:
-                k2_state -= 2 * np.pi
-            elif delta < -np.pi:
-                k2_state += 2 * np.pi
-
-            k2_z = np.matrix([[yaw_observed], [yawdot_observed]])
-
-            # Compute kalman gain.
-            k2_G = k2_P * k2_C.T * (k2_C * k2_P * k2_C.T + k2_R).I
-            k2_state += k2_G * (k2_z - k2_C * k2_state)
-            k2_P = (np.identity(2) - k2_G * k2_C) * k2_P
+            last_obs_yaw = sensors.bike.yaw[bike_index]
+            last_obs_speed = sensors.gps.speed[gps_index]
+            last_obs_yawdot = (last_obs_speed * 
+                    np.tan(sensors.bike.steer[bike_index]) / BIKE_LENGTH)
 
             # Catch up to most recent sensor measurement.
             while sensors.bike.timestamp[bike_index] < t:
                 bike_index += 1
                 #print 'Skipping sensor data, timestep might be too small.'
+
+        k1_state, k1_P, k2_state, k2_P = kalman(dt, k1_state, k1_P, k2_state, k2_P, 
+                                                gps_sensor=gps_sensor, bike_sensor=bike_sensor)
 
         raw_output.append({
             'timestamp':    t,
@@ -138,12 +109,12 @@ def kalman_retro(sensors, dt=0.01, speed=1.30, bike_length=1.0):
             'ydot':         k1_state[3, 0],
             'yaw':          k2_state[0, 0],
             'yawdot':       k2_state[1, 0],
-            'last_x':       last_observed_x,
-            'last_y':       last_observed_y,
-            'last_yaw':     last_observed_yaw,
-            'last_gps_yaw': last_observed_gps_yaw,
-            'last_yawdot':  last_observed_yawdot,
-            'last_speed':   last_observed_speed
+            'last_x':       last_obs_x,
+            'last_y':       last_obs_y,
+            'last_yaw':     last_obs_yaw,
+            'last_gps_yaw': last_obs_gps_yaw,
+            'last_yawdot':  last_obs_yawdot,
+            'last_speed':   last_obs_speed
         })
 
     output = {
@@ -163,6 +134,62 @@ def kalman_retro(sensors, dt=0.01, speed=1.30, bike_length=1.0):
     }
 
     return output
+
+
+def kalman(dt, k1_state, k1_P, k2_state, k2_P, gps_sensor=None, bike_sensor=None):
+    # Sensor covariance matrix.
+    k1_R = np.matrix([[200, 0, 0, 0], [0, 50, 0, 0], [0,0,0.01,0], [0,0,0,0.01]])
+    k2_R = np.matrix([[2, 0], [0, 0.02]])
+
+    # Hidden state to observed state transformation.
+    k1_C = np.identity(4)
+    k2_C = np.identity(2)
+
+    # State update matrix.
+    k1_A = np.identity(4)
+    k1_A[0, 2] = dt
+    k1_A[1, 3] = dt
+
+    k2_A = np.identity(2)
+    k2_A[0, 1] = dt
+
+    # Predict new state.
+    k1_state = k1_A * k1_state
+    k1_P = k1_A * k1_P * k1_A.T + np.identity(4) * dt
+
+    k2_state = k2_A * k2_state
+    k2_P = k2_A * k2_P * k2_A.T + np.identity(2) * dt
+
+    # Update state if there are sensor observations.
+    if gps_sensor is not None:
+        yaw_obs = k2_state[0, 0]
+        xdot_obs = gps_sensor.speed * np.cos(yaw_obs)
+        ydot_obs = gps_sensor.speed * np.sin(yaw_obs)
+
+        k1_z = np.matrix([[gps_sensor.x], [gps_sensor.y], [xdot_obs], [ydot_obs]])
+
+        # Compute kalman gain.
+        k1_G = k1_P * k1_C.T * (k1_C * k1_P * k1_C.T + k1_R).I
+        k1_state += k1_G * (k1_z - k1_C * k1_state)
+        k1_P = (np.identity(4) - k1_G * k1_C) * k1_P
+
+    if bike_sensor is not None:
+        yaw_obs = bike_sensor.yaw
+        speed_obs = bike_sensor.speed
+        yawdot_obs = speed_obs * np.tan(bike_sensor.steer) / BIKE_LENGTH
+
+        # Wrap yaw around in case we've done a full circle.
+        k2_state[0, 0] = align_radians(k2_state[0, 0], center=yaw_obs)
+
+        k2_z = np.matrix([[yaw_obs], [yawdot_obs]])
+
+        # Compute kalman gain.
+        k2_G = k2_P * k2_C.T * (k2_C * k2_P * k2_C.T + k2_R).I
+        k2_state += k2_G * (k2_z - k2_C * k2_state)
+        k2_P = (np.identity(2) - k2_G * k2_C) * k2_P
+
+    return k1_state, k1_P, k2_state, k2_P
+
 
 
 def kalman_retro_old(raw_state):
