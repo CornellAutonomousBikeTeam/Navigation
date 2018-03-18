@@ -8,86 +8,110 @@ testing, use "bash start.sh run_with_kalman" to run this node.
 import numpy as np
 from std_msgs.msg import Float32
 import rospy
-#import kalman
-import localization
+from localization import kalman
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import MultiArrayLayout
 from std_msgs.msg import MultiArrayDimension
+from util.sensor_data import GPSData, BikeData
 
 gps_data = []
 kalman_state = []
-kalman_state_matrix = np.matrix([0])
-p_state_matrix = np.matrix([0])
-count = 0
-initial_lat = 0
-initial_long = 0
+
+
 class Kalman(object):
-
     def __init__(self):
-
-        # we set initial values that would be close, but really
-        # should initialize itself -- TODO
-
-        self.gps_xy = [101,3]
-        self.yaw = [1]
-        self.velocity = [2]
-        self.time_step = [90]
         self.ready = False
+        self.last_timestamp = None
+
+        self.k1_state = None
+        self.k1_P = np.identity(4)
+
+        self.k2_state = None
+        self.k2_P = np.identity(2)
+
+        # TODO: shouldn't need this
+        self.gps_yaw = None
+        self.gps_speed = None
 
         self.pub = rospy.Publisher('kalman_pub', Float32MultiArray, queue_size=10)
         rospy.init_node('kalman')
         rospy.Subscriber("bike_state", Float32MultiArray, self.bike_state_listener)
         rospy.Subscriber("gps", Float32MultiArray, self.gps_listener)
 
+
     def bike_state_listener(self, data):
-        """ROS callback for the bike_state topic"""
-        
-        #comment if using bike_state at all (for yaw or velocity)
-        pass
-        
-        #uncomment if getting yaw from bike_state (IMU) 
-        #self.yaw = [data.data[9]]
-        
-        #uncomment if getting velocity from bike_state (hall sensor)
-        #self.velocity = [data.data[6]]
+        """ROS callback for the bike_state topic"""   
+        steer = data.data[4]
+        timestamp = data.data[0] / 1.e9
+
+        delta_time = timestamp - self.last_timestamp
+        self.last_timestamp = timestamp
+
+        bike_sensor_data = BikeSensor(
+                steer       = steer,
+                yaw         = self.gps_yaw,
+                speed       = self.gps_speed,
+                timestamp   = None)
+
+        output = kalman.kalman(
+                delta_time,
+                self.k1_state,
+                self.k1_P,
+                self.k2_state,
+                self.k2_P,
+                bike_sensor=bike_sensor_data)
+
+        self.k1_state   = output[0]
+        self.k1_P       = output[1]
+        self.k2_state   = output[2]
+        self.k2_P       = output[3]
+
 
     def gps_listener(self, data):
         """ROS callback for the gps topic"""
-        self.ready = True
-        global count,initial_lat,initial_long
-        #print(self.ready)
-        #Check if this is our first GPS reading --
-        # not robust but will work for now if we start test at the right spot
-        if count == 0:
-            #Re-defines the origins 
-            initial_lat = data.data[0]
-            initial_long = data.data[1]
-            count = 1
-        #Important fields from data
         latitude = data.data[0] # In degrees
         longitude = data.data[1]
-        
-        # uncomment if getting velocity from gps
-        self.velocity = [data.data[8]]
-        
-        # uncomment if getting yaw from gps
-        self.yaw = [np.deg2rad(data.data[7])]
-        
-        self.time_step = [data.data[10]]
-        
+        velocity = data.data[8]
+        yaw = np.deg2rad(data.data[7])
+        timestamp = data.data[0] / 1.e9
+
+        delta_time = timestamp - self.last_timestamp
+        self.last_timestamp = timestamp
        
         # Converts lat long to x,y using FIXED origin
         x, y = requestHandler.math_convert(float(latitude), float(longitude))
-        #Converts lat long to x,y using RELATIVE origin
-        #x, y = requestHandler.math_convert_relative(float(latitude), float(longitude), float(initial_lat), float(initial_long))
-        
-        self.gps_xy = [x,y]
-        
-    def main_loop(self):
 
+        if not self.ready:
+            # TODO: don't assume initial xdot and ydot are zero
+            self.k1_state = np.matrix([[x], [y], [0], [0]])
+            self.k2_state = np.matrix([[yaw], [0]])
+            self.ready = True
+        
+        gps_sensor_data = GPSSensor(
+                x           = x,
+                y           = y,
+                yaw         = yaw,
+                speed       = velocity,
+                timestamp   = None)
+
+        output = kalman.kalman(
+                delta_time,
+                self.k1_state,
+                self.k1_P,
+                self.k2_state,
+                self.k2_P,
+                gps_sensor=gps_sensor_data)
+
+        self.k1_state   = output[0]
+        self.k1_P       = output[1]
+        self.k2_state   = output[2]
+        self.k2_P       = output[3]
+        
+
+    def main_loop(self):
         rate = rospy.Rate(100)
 
         #Run until the nodes are shutdown (end.sh run OR start.sh was killed)
@@ -97,40 +121,14 @@ class Kalman(object):
             
             #wait here until GPS has been called
             while not self.ready:
-                jeven = "tooter"
-            
-            # The Kalman filter wants the GPS data in matrix form
-            #Build matrix from gps x,y coordinates, yaw, and bike velocity
-            gps_matrix = np.matrix(self.gps_xy + self.yaw + self.velocity + self.time_step)
-            gps_data.append(gps_matrix)
-            
-            # Initialize Kalman filter state
-            if len(gps_data) == 1:
-                P_initial = np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
-                x_pos = gps_matrix[:,0]
-                y_pos = gps_matrix[:,1]
-                yaw = gps_matrix[:,2]
-                v = gps_matrix[:,3]
-                v_0 = v.item(0)
-                yaw_0 = yaw.item(0)
-                x_dot_0 = v_0 * np.cos(yaw_0)
-                y_dot_0 = v_0 * np.sin(yaw_0)
-                s_initial = np.matrix([[x_pos.item(0)], [y_pos.item(0)], [x_dot_0], [y_dot_0]])
-                output_matrix = kalman.kalman_real_time(gps_matrix, s_initial, P_initial)
-                
-            #Use the output of the previous call as the input to the next call
-            else:
-                output_matrix = kalman.kalman_real_time(gps_matrix, kalman_state_matrix, p_state_matrix)
-            
-            #save gps state values for later plotting
-            kalman_state_matrix = output_matrix[0] 
-            p_state_matrix = output_matrix[1]
+                time.sleep(0.001)
             
             #Change output_matrix to a standard array for publishing
-            kalman_state = output_matrix[0].flatten().tolist()[0]
+            kalman_state = [k1_state[0, 0], k1_state[1, 0], k1_state[2, 0], k1_state[3, 0]]
             
             self.pub.publish(layout, kalman_state)
             rate.sleep()
+
 
 if __name__ == '__main__':
     Kalman().main_loop()

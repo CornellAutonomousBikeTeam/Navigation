@@ -1,7 +1,9 @@
 import csv
+import math
 import numpy as np
 from collections import namedtuple
 from util.location import global_to_local
+from util.math_helpers import align_radians
 
 
 # Thresholds for rejecting GPS outliers.
@@ -35,7 +37,7 @@ class SensorData:
 
             for i, row in enumerate(csv_reader):
             	x, y = global_to_local(float(row[2]), float(row[3]))
-                yaw = float(row[9]) * np.pi / 180.
+                yaw = align_radians(-float(row[9]) * np.pi / 180. + np.pi / 2)
                 speed = float(row[10])
                 timestamp = float(row[0]) / 1.e9
 
@@ -77,7 +79,7 @@ class SensorData:
             for row in list(csv_reader)[1:]:
                 steer = float(row[4])
                 speed = float(row[8])
-                yaw = float(row[11]) - np.pi / 2.
+                yaw = align_radians(-float(row[11]) + np.pi / 2. + 0.9)
                 timestamp = float(row[0]) / 1.e9
 
                 steer_data.append(steer)
