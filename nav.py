@@ -4,6 +4,7 @@
 Input for algorithm is bike state and waypoints, output is front wheel angle."""
 
 import numpy as np
+import random
 import math
 import sys
 import geometry
@@ -304,4 +305,4 @@ class Nav(object):
         All external users of this class should call this method
         instead of the other steering-angle-calculation methods."""
 
-        return 0#self.pid_controller()
+        return self.pid_controller()
