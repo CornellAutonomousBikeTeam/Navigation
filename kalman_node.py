@@ -16,6 +16,7 @@ from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import MultiArrayLayout
 from std_msgs.msg import MultiArrayDimension
 from util.sensor_data import GPSData, BikeData
+from util.location import global_to_local
 
 gps_data = []
 kalman_state = []
@@ -82,7 +83,7 @@ class Kalman(object):
         self.last_timestamp = timestamp
        
         # Converts lat long to x,y using FIXED origin
-        x, y = requestHandler.math_convert(float(latitude), float(longitude))
+        x, y = global_to_local(float(latitude), float(longitude))
 
         if not self.ready:
             # TODO: don't assume initial xdot and ydot are zero
