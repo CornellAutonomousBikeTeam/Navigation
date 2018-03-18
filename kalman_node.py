@@ -55,7 +55,7 @@ class Kalman(object):
         delta_time = timestamp - self.last_timestamp
         self.last_timestamp = timestamp
 
-        bike_sensor_data = BikeSensor(
+        bike_sensor_data = BikeData(
                 steer       = steer,
                 yaw         = self.gps_yaw,
                 speed       = self.gps_speed,
@@ -96,7 +96,7 @@ class Kalman(object):
         delta_time = timestamp - self.last_timestamp
         self.last_timestamp = timestamp
         
-        gps_sensor_data = GPSSensor(
+        gps_sensor_data = GPSData(
                 x           = x,
                 y           = y,
                 yaw         = yaw,
@@ -130,7 +130,12 @@ class Kalman(object):
                 time.sleep(0.001)
             
             #Change output_matrix to a standard array for publishing
-            kalman_state = [k1_state[0, 0], k1_state[1, 0], k1_state[2, 0], k1_state[3, 0]]
+            kalman_state = [
+                    self.k1_state[0, 0],
+                    self.k1_state[1, 0],
+                    self.k1_state[2, 0],
+                    self.k1_state[3, 0]
+            ]
             
             self.pub.publish(layout, kalman_state)
             rate.sleep()
