@@ -80,7 +80,7 @@ class Kalman(object):
         latitude = data.data[0] # In degrees
         longitude = data.data[1]
         self.gps_speed = data.data[8]
-        yaw = np.deg2rad(data.data[7])
+        self.gps_yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
        
         # Converts lat long to x,y using FIXED origin
@@ -89,7 +89,7 @@ class Kalman(object):
         if not self.ready:
             # TODO: don't assume initial xdot and ydot are zero
             self.k1_state = np.matrix([[x], [y], [0], [0]])
-            self.k2_state = np.matrix([[yaw], [0]])
+            self.k2_state = np.matrix([[self.gps_yaw], [0]])
             self.ready = True
             self.last_timestamp = timestamp
 
@@ -99,7 +99,7 @@ class Kalman(object):
         gps_sensor_data = GPSData(
                 x           = x,
                 y           = y,
-                yaw         = yaw,
+                yaw         = self.gps_yaw,
                 speed       = self.gps_speed,
                 timestamp   = None)
 
