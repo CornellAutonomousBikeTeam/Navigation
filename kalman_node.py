@@ -45,7 +45,10 @@ class Kalman(object):
 
 
     def bike_state_listener(self, data):
-        """ROS callback for the bike_state topic"""   
+        """ROS callback for the bike_state topic"""
+        if not self.ready:
+            return
+
         steer = data.data[4]
         timestamp = data.data[0] / 1.e9
 
@@ -79,9 +82,6 @@ class Kalman(object):
         velocity = data.data[8]
         yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
-
-        delta_time = timestamp - self.last_timestamp
-        self.last_timestamp = timestamp
        
         # Converts lat long to x,y using FIXED origin
         x, y = global_to_local(float(latitude), float(longitude))
@@ -91,6 +91,10 @@ class Kalman(object):
             self.k1_state = np.matrix([[x], [y], [0], [0]])
             self.k2_state = np.matrix([[yaw], [0]])
             self.ready = True
+            self.last_timestamp = timestamp
+
+        delta_time = timestamp - self.last_timestamp
+        self.last_timestamp = timestamp
         
         gps_sensor_data = GPSSensor(
                 x           = x,
