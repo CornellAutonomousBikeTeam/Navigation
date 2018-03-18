@@ -79,7 +79,7 @@ class Kalman(object):
         """ROS callback for the gps topic"""
         latitude = data.data[0] # In degrees
         longitude = data.data[1]
-        velocity = data.data[8]
+        self.gps_speed = data.data[8]
         yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
        
@@ -100,7 +100,7 @@ class Kalman(object):
                 x           = x,
                 y           = y,
                 yaw         = yaw,
-                speed       = velocity,
+                speed       = self.gps_speed,
                 timestamp   = None)
 
         output = kalman(
