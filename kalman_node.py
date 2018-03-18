@@ -8,7 +8,7 @@ testing, use "bash start.sh run_with_kalman" to run this node.
 import numpy as np
 from std_msgs.msg import Float32
 import rospy
-from localization import kalman
+from localization.kalman import kalman
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
@@ -56,7 +56,7 @@ class Kalman(object):
                 speed       = self.gps_speed,
                 timestamp   = None)
 
-        output = kalman.kalman(
+        output = kalman(
                 delta_time,
                 self.k1_state,
                 self.k1_P,
@@ -97,7 +97,7 @@ class Kalman(object):
                 speed       = velocity,
                 timestamp   = None)
 
-        output = kalman.kalman(
+        output = kalman(
                 delta_time,
                 self.k1_state,
                 self.k1_P,
