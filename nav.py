@@ -4,6 +4,7 @@
 Input for algorithm is bike state and waypoints, output is front wheel angle."""
 
 import numpy as np
+import random
 import math
 import sys
 import geometry
