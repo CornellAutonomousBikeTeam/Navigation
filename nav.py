@@ -199,6 +199,10 @@ class Nav(object):
                 self.create_lookahead_correction(path, bike))
 
         # Debug statement to show each contribution
+        self.debug_info = "{;.3f}/{.3f}/{.3f} ({.1f},{.1f})-({.1f},{.1f})"
+            .format(distance_contribution, angle_contribution,
+                    next_turn_contribution, path[0][0], path[0][1], path[1][0],
+                    path[1][1])
         if DEBUG_PRINT_CONTRIBS:
             describe_angle = lambda angle: "right" if angle > 0 else "left"
             print(("dist = {:.4f} ({})\tangle = {:.4f} ({})\t" +
@@ -306,3 +310,6 @@ class Nav(object):
         instead of the other steering-angle-calculation methods."""
 
         return self.pid_controller()
+
+    def get_last_debug_info(self):
+        return self.debug_info

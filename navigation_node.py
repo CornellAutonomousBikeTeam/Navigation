@@ -11,6 +11,7 @@ import nav
 import numpy as np
 from std_msgs.msg import Int32MultiArray
 from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import String
 import bikeState
 import mapModel
 import requestHandler
@@ -104,6 +105,7 @@ def update_gps(data):
 def talker():
     pub = rospy.Publisher('nav_instr', Float32, queue_size=10)
     rospy.init_node('navigation', anonymous=True)
+    pub_debug = rospy.Publisher('nav_debug', String, queue_size=10)
 
     rospy.Subscriber("bike_state", Float32MultiArray, update_bike_state) 
     rospy.Subscriber("gps", Float32MultiArray, update_gps)
@@ -111,11 +113,16 @@ def talker():
     rospy.Subscriber("paths", Float32MultiArray, path_parse)
     
     rate = rospy.Rate(100)
+    i = 0
     while not rospy.is_shutdown():
         new_map = new_nav.map_model
         #print("Map_model bike x y: {}, {}".format(new_nav.map_model.bike.xB, new_nav.map_model.bike.yB))
         #rospy.loginfo((new_bike.xB, new_bike.yB, new_bike.psi, new_nav.direction_to_turn()))
         pub.publish(new_nav.get_steering_angle())
+        if i == 4:
+            pub.publish(new_nav.get_last_debug_info())
+            i = 0
+        i += 1
         rate.sleep()
 
 if __name__ == '__main__':
