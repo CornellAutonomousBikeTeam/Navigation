@@ -15,7 +15,7 @@ from std_msgs.msg import String
 import bikeState
 import mapModel
 import requestHandler
-
+from util.location import global_to_local
 #def callback(data):
  #   new_nav.map_model.bike.xy_coord = (data.x, data.y)
  #  new_nav.map_model.bike.direction = data.theta
@@ -104,8 +104,8 @@ def update_gps(data):
 
 def talker():
     pub = rospy.Publisher('nav_instr', Float32, queue_size=10)
-    rospy.init_node('navigation', anonymous=True)
     pub_debug = rospy.Publisher('nav_debug', String, queue_size=10)
+    rospy.init_node('navigation', anonymous=True)
 
     rospy.Subscriber("bike_state", Float32MultiArray, update_bike_state) 
     rospy.Subscriber("gps", Float32MultiArray, update_gps)
@@ -120,7 +120,7 @@ def talker():
         #rospy.loginfo((new_bike.xB, new_bike.yB, new_bike.psi, new_nav.direction_to_turn()))
         pub.publish(new_nav.get_steering_angle())
         if i == 4:
-            pub.publish(new_nav.get_last_debug_info())
+            pub_debug.publish(String(new_nav.get_debug_info()))
             i = 0
         i += 1
         rate.sleep()
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         old_psi = 0
         old_v = 0
         d_psi = 0
-        new_bike = bikeState.Bike(0, -10, 0.1, np.pi/3, 0, 0, 3.57)
+        new_bike = bikeState.Bike(0, -10, 0.1, np.pi/3, 0, 0, 3.00)
         
         #straight path bottom of stairs to middle intersection
         #waypoints = [(133.74892645377858, -432.5469806370678), (114.05523219700194, -395.85300512410294)]
@@ -139,7 +139,11 @@ if __name__ == '__main__':
         #long path
         #waypoints = [(42.44422, -76.43866), (42,44447, -76.48367), (42.44458, -76.4835)]
         #waypoints = [(164.92918389320673, -412.53122538008699), (160.82636519097008, -408.08352424480717), (158.36456020192119, -400.29993577850547), (157.54391784874556, -395.85215731941992), (152.62045116162616, -385.84472352909091), (141.95309049412472, -369.16571007809335), (133.74760279568892, -363.6061261255179), (124.72163122543957, -360.27044577941609), (118.1572971243023, -358.04666168562972), (110.7724130084174, -354.71093523541589), (97.643830726023069, -354.7111316365864), (98.464555727252943, -368.05451128333181), (101.74674006642893, -370.2783626484474), (102.56727829387685, -370.27835061499496), (103.3878330236748, -371.39028775136137), (114.05523219700194, -395.85300512410294), (134.56949349422308, -433.6589141004269)]
-        
+        #converting from lat long to local coordinate plane
+        for i in range(len(waypoints)):
+            latitude, longitude = waypoints[i][0], waypoints[i][1]
+            waypoints[i] = global_to_local(float(latitude),float(longitude))
+
         new_map = mapModel.Map_Model(new_bike, waypoints, [], [])
         new_nav = nav.Nav(new_map)
         talker()
