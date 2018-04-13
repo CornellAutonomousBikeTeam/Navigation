@@ -6,7 +6,7 @@ import util
 
 # Run localization algorithm retroactively on csv data.
 def localize_retro(gps_filename, bike_filename):
-    localization.kalman_driver.kalman_odometry_retro(
+    localization.kalman_driver.draw_retro(
         gps_filename=gps_filename, bike_filename=bike_filename
     )
 

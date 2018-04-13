@@ -11,6 +11,11 @@ GPS_RANGE_THRESHOLD = 20000 # 20 kilometers
 GPS_SPEED_THRESHOLD = 100   # 100 m/s
 
 
+# Empirical correction factors for sensors
+YAW_CORRECTION = 0.9
+STEER_CORRECTION = -0.095
+
+
 GPSData = namedtuple('GPSData', ['x', 'y', 'yaw', 'speed', 'timestamp'])
 BikeData = namedtuple('BikeData', ['steer', 'yaw', 'speed', 'timestamp'])
 
@@ -79,10 +84,10 @@ class SensorData:
             for row in list(csv_reader)[1:]:
                 steer = float(row[4])
                 speed = float(row[8])
-                yaw = align_radians(-float(row[11]) + np.pi / 2. + 0.9)
+                yaw = align_radians(-float(row[11]) + np.pi / 2. + YAW_CORRECTION)
                 timestamp = float(row[0]) / 1.e9
 
-                steer_data.append(steer)
+                steer_data.append(steer + STEER_CORRECTION)
                 speed_data.append(speed)
                 yaw_data.append(yaw)
                 timestamp_data.append(timestamp)
