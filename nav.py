@@ -199,6 +199,14 @@ class Nav(object):
                 self.create_lookahead_correction(path, bike))
 
         # Debug statement to show each contribution
+        hh = path[0][0]
+        jj = path[0][1]
+        kk = path[1][0]
+        ll = path[1][1]
+        self.debug_info = ("SD {:.3f}, DC {:.3f}, AD {:.3f}, AC {:.3f}, NTC {:.3f} ({:.1f},{:.1f})-({:.1f},{:.1f})"
+            .format(signed_dist, distance_contribution, angle_diff, angle_contribution,
+                next_turn_contribution, path[0][0], path[0][1], path[1][0],
+                path[1][1]))
         if DEBUG_PRINT_CONTRIBS:
             describe_angle = lambda angle: "right" if angle > 0 else "left"
             print(("dist = {:.4f} ({})\tangle = {:.4f} ({})\t" +
@@ -220,8 +228,8 @@ class Nav(object):
         # Store current errors in state variables
         self.last_dist_error = signed_dist
         self.last_ang_error = angle_diff
-        if count % 50 == 0:
-            print("Distance from path: {}".format(signed_dist))
+        #if count % 50 == 0:
+        #    print("Distance from path: {}".format(signed_dist))
         count = count + 1
         return self.clamp_steer_angle(steerD)
 
@@ -306,3 +314,6 @@ class Nav(object):
         instead of the other steering-angle-calculation methods."""
 
         return self.pid_controller()
+
+    def get_debug_info(self):
+        return self.debug_info
