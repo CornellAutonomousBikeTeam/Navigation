@@ -9,7 +9,8 @@ import numpy as np
 from std_msgs.msg import Float32
 import rospy
 import time
-from localization.kalman import kalman
+from localization.kalman import KalmanFilter
+from localization.zensor_fusion import SensorFusion
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
@@ -28,15 +29,11 @@ class Kalman(object):
         self.ready = False
         self.last_timestamp = None
 
-        self.k1_state = None
-        self.k1_P = np.identity(4)
-
-        self.k2_state = None
-        self.k2_P = np.identity(2)
-
         # TODO: shouldn't need this
         self.gps_yaw = None
         self.gps_speed = None
+
+        self.position_filter = SensorFusion(0, 0, 0, 0, 0)
 
         self.pub = rospy.Publisher('kalman_pub', Float32MultiArray, queue_size=10)
         rospy.init_node('kalman')
@@ -61,18 +58,7 @@ class Kalman(object):
                 speed       = self.gps_speed,
                 timestamp   = None)
 
-        output = kalman(
-                delta_time,
-                self.k1_state,
-                self.k1_P,
-                self.k2_state,
-                self.k2_P,
-                bike_sensor=bike_sensor_data)
-
-        self.k1_state   = output[0]
-        self.k1_P       = output[1]
-        self.k2_state   = output[2]
-        self.k2_P       = output[3]
+        self.position_filter.update(delta_time, bike_sensor=bike_sensor_data)
 
 
     def gps_listener(self, data):
@@ -103,18 +89,7 @@ class Kalman(object):
                 speed       = self.gps_speed,
                 timestamp   = None)
 
-        output = kalman(
-                delta_time,
-                self.k1_state,
-                self.k1_P,
-                self.k2_state,
-                self.k2_P,
-                gps_sensor=gps_sensor_data)
-
-        self.k1_state   = output[0]
-        self.k1_P       = output[1]
-        self.k2_state   = output[2]
-        self.k2_P       = output[3]
+        self.position_filter.update(delta_time, gps_sensor=gps_sensor_data)
         
 
     def main_loop(self):
@@ -125,19 +100,16 @@ class Kalman(object):
             dim = [MultiArrayDimension('data', 1, 4)]
             layout = MultiArrayLayout(dim, 0)
             
-            #wait here until GPS has been called
-            while not self.ready:
-                time.sleep(0.001)
-            
-            #Change output_matrix to a standard array for publishing
-            kalman_state = [
-                    self.k1_state[0, 0],
-                    self.k1_state[1, 0],
-                    self.k1_state[2, 0],
-                    self.k1_state[3, 0]
-            ]
-            
-            self.pub.publish(layout, kalman_state)
+            if self.ready:
+                kalman_state = [
+                        self.position_filter.get_x(),
+                        self.position_filter.get_xdot(),
+                        self.position_filter.get_y(),
+                        self.position_filter.get_ydot()
+                ]
+                
+                self.pub.publish(layout, kalman_state)
+
             rate.sleep()
 
 
