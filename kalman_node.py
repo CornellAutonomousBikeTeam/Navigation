@@ -36,6 +36,8 @@ class Kalman(object):
         self.position_filter = SensorFusion(0, 0, 0, 0, 0)
 
         self.pub = rospy.Publisher('kalman_pub', Float32MultiArray, queue_size=10)
+        self.pub_debug = rospy.Publisher('kalman_debug', String, queue_size=10)
+
         rospy.init_node('kalman')
         rospy.Subscriber("bike_state", Float32MultiArray, self.bike_state_listener)
         rospy.Subscriber("gps", Float32MultiArray, self.gps_listener)
@@ -71,7 +73,14 @@ class Kalman(object):
        
         # Converts lat long to x,y using FIXED origin
         x, y = global_to_local(float(latitude), float(longitude))
-
+        
+        gps_debug_state = [x,y];
+       
+        dim = [MultiArrayDimension('data', 1, 2)]
+        layout = MultiArrayLayout(dim, 0)
+        
+        self.pub_debug.publish(layout, gps_debug_state)
+        
         if not self.ready:
             # TODO: don't assume initial xdot and ydot are zero
             self.k1_state = np.matrix([[x], [y], [0], [0]])
