@@ -74,16 +74,14 @@ class Kalman(object):
         # Converts lat long to x,y using FIXED origin
         x, y = global_to_local(float(latitude), float(longitude))
 
+        gps_debug_state = [x, y]
+
         if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
             return
 
         self.gps_speed = data.data[8]
         self.gps_yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
-       
-        
-        
-        gps_debug_state = [x,y];
        
         dim = [MultiArrayDimension('data', 1, 2)]
         layout = MultiArrayLayout(dim, 0)
