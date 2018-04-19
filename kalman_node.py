@@ -24,6 +24,9 @@ gps_data = []
 kalman_state = []
 
 
+OUTLIER_THRESHOLD = 1000 # 1km from origin
+
+
 class Kalman(object):
     def __init__(self):
         self.ready = False
@@ -67,12 +70,18 @@ class Kalman(object):
         """ROS callback for the gps topic"""
         latitude = data.data[0] # In degrees
         longitude = data.data[1]
+
+        # Converts lat long to x,y using FIXED origin
+        x, y = global_to_local(float(latitude), float(longitude))
+
+        if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
+            return
+
         self.gps_speed = data.data[8]
         self.gps_yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
        
-        # Converts lat long to x,y using FIXED origin
-        x, y = global_to_local(float(latitude), float(longitude))
+        
         
         gps_debug_state = [x,y];
        
