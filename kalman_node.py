@@ -10,13 +10,14 @@ from std_msgs.msg import Float32
 import rospy
 import time
 from localization.kalman import KalmanFilter
-from localization.zensor_fusion import SensorFusion
+from localization.sensor_fusion import SensorFusion
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import MultiArrayLayout
 from std_msgs.msg import MultiArrayDimension
+from std_msgs.msg import String
 from util.sensor_data import GPSData, BikeData
 from util.location import global_to_local
 
@@ -39,7 +40,7 @@ class Kalman(object):
         self.position_filter = SensorFusion(0, 0, 0, 0, 0)
 
         self.pub = rospy.Publisher('kalman_pub', Float32MultiArray, queue_size=10)
-        self.pub_debug = rospy.Publisher('kalman_debug', String, queue_size=10)
+        self.pub_debug = rospy.Publisher('kalman_debug', Float32MultiArray, queue_size=10)
 
         rospy.init_node('kalman')
         rospy.Subscriber("bike_state", Float32MultiArray, self.bike_state_listener)
@@ -60,7 +61,7 @@ class Kalman(object):
         bike_sensor_data = BikeData(
                 steer       = steer,
                 yaw         = self.gps_yaw,
-                speed       = self.gps_speed,
+                speed       = data.data[6],
                 timestamp   = None)
 
         self.position_filter.update(delta_time, bike_sensor=bike_sensor_data)
@@ -74,20 +75,14 @@ class Kalman(object):
         # Converts lat long to x,y using FIXED origin
         x, y = global_to_local(float(latitude), float(longitude))
 
-        gps_debug_state = [x, y]
-
         if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
             return
 
         self.gps_speed = data.data[8]
         self.gps_yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
-       
-        dim = [MultiArrayDimension('data', 1, 2)]
-        layout = MultiArrayLayout(dim, 0)
-        
-        self.pub_debug.publish(layout, gps_debug_state)
-        
+
+        # Converts lat long to x,y using FIXED origin
         if not self.ready:
             # TODO: don't assume initial xdot and ydot are zero
             self.k1_state = np.matrix([[x], [y], [0], [0]])
