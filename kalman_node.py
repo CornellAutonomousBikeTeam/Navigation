@@ -15,17 +15,15 @@ import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
 from std_msgs.msg import Float32MultiArray
-from std_msgs.msg import MultiArrayLayout
-from std_msgs.msg import MultiArrayDimension
+from std_msgs.msg import MultiArrayLayout, MultiArrayDimension
+from std_msgs.msg import Empty
 from util.sensor_data import GPSData, BikeData
 from util.location import global_to_local
 
 gps_data = []
 kalman_state = []
 
-
 OUTLIER_THRESHOLD = 1000 # 1km from origin
-
 
 class Kalman(object):
     def __init__(self):
@@ -44,6 +42,7 @@ class Kalman(object):
         rospy.init_node('kalman')
         rospy.Subscriber("bike_state", Float32MultiArray, self.bike_state_listener)
         rospy.Subscriber("gps", Float32MultiArray, self.gps_listener)
+        rospy.Subscriber("nav_reset", Empty, self.reset_listener)
 
 
     def bike_state_listener(self, data):
@@ -82,12 +81,12 @@ class Kalman(object):
         self.gps_speed = data.data[8]
         self.gps_yaw = np.deg2rad(data.data[7])
         timestamp = data.data[0] / 1.e9
-       
+
         dim = [MultiArrayDimension('data', 1, 2)]
         layout = MultiArrayLayout(dim, 0)
-        
+
         self.pub_debug.publish(layout, gps_debug_state)
-        
+ 
         if not self.ready:
             # TODO: don't assume initial xdot and ydot are zero
             self.k1_state = np.matrix([[x], [y], [0], [0]])
@@ -106,7 +105,11 @@ class Kalman(object):
                 timestamp   = None)
 
         self.position_filter.update(delta_time, gps_sensor=gps_sensor_data)
-        
+
+    def reset_listener(self, data):
+        # so that the next time we get GPS info, we just refresh our state
+        self.ready = False
+        self.position_filter.reset()
 
     def main_loop(self):
         rate = rospy.Rate(100)

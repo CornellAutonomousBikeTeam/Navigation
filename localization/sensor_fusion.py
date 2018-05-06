@@ -70,3 +70,13 @@ class SensorFusion:
         self.yaw += dt * self.yawdot
         self.x += dt * self.speed * cos(self.yaw)
         self.y += dt * self.speed * sin(self.yaw)
+
+    def reset(self):
+        "Resets the internal state of the sensor fusion component."
+        self.gps_last_x = None
+        self.gps_last_y = None
+        self.x      = 0
+        self.y      = 0
+        self.speed  = 0
+        self.yaw    = 0
+        self.yawdot = 0
