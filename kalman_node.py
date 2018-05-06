@@ -8,14 +8,18 @@ testing, use "bash start.sh run_with_kalman" to run this node.
 import numpy as np
 from std_msgs.msg import Float32
 import rospy
-#import kalman
-import localization
+import time
+from localization.kalman import KalmanFilter
+from localization.sensor_fusion import SensorFusion
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import MultiArrayLayout
 from std_msgs.msg import MultiArrayDimension
+from std_msgs.msg import String
+from util.sensor_data import GPSData, BikeData
+from util.location import global_to_local
 
 gps_data = []
 kalman_state = []
@@ -38,21 +42,30 @@ class Kalman(object):
         self.ready = False
 
         self.pub = rospy.Publisher('kalman_pub', Float32MultiArray, queue_size=10)
+        self.pub_debug = rospy.Publisher('kalman_debug', Float32MultiArray, queue_size=10)
+
         rospy.init_node('kalman')
         rospy.Subscriber("bike_state", Float32MultiArray, self.bike_state_listener)
         rospy.Subscriber("gps", Float32MultiArray, self.gps_listener)
 
     def bike_state_listener(self, data):
         """ROS callback for the bike_state topic"""
-        
-        #comment if using bike_state at all (for yaw or velocity)
-        pass
-        
-        #uncomment if getting yaw from bike_state (IMU) 
-        #self.yaw = [data.data[9]]
-        
-        #uncomment if getting velocity from bike_state (hall sensor)
-        #self.velocity = [data.data[6]]
+        if not self.ready:
+            return
+
+        steer = data.data[4]
+        timestamp = data.data[0] / 1.e9
+
+        delta_time = timestamp - self.last_timestamp
+        self.last_timestamp = timestamp
+
+        bike_sensor_data = BikeData(
+                steer       = steer,
+                yaw         = self.gps_yaw,
+                speed       = data.data[6],
+                timestamp   = None)
+
+        self.position_filter.update(delta_time, bike_sensor=bike_sensor_data)
 
     def gps_listener(self, data):
         """ROS callback for the gps topic"""
@@ -71,10 +84,31 @@ class Kalman(object):
         longitude = data.data[1]
         
         # uncomment if getting velocity from gps
-        self.velocity = [data.data[8]]
+        #self.velocity = [data.data[8]]
         
         # uncomment if getting yaw from gps
-        self.yaw = [np.deg2rad(data.data[7])]
+        #self.yaw = [np.deg2rad(data.data[7])]
+
+        # Converts lat long to x,y using FIXED origin
+        x, y = global_to_local(float(latitude), float(longitude))
+
+        if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
+            return
+
+        self.gps_speed = data.data[8]
+        self.gps_yaw = np.deg2rad(data.data[7])
+        timestamp = data.data[0] / 1.e9
+
+        # Converts lat long to x,y using FIXED origin
+        if not self.ready:
+            # TODO: don't assume initial xdot and ydot are zero
+            self.k1_state = np.matrix([[x], [y], [0], [0]])
+            self.k2_state = np.matrix([[self.gps_yaw], [0]])
+            self.ready = True
+            self.last_timestamp = timestamp
+
+        delta_time = timestamp - self.last_timestamp
+        self.last_timestamp = timestamp
         
         self.time_step = [data.data[10]]
         
