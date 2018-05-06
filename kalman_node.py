@@ -147,7 +147,7 @@ class Kalman(object):
         while not rospy.is_shutdown():
             dim = [MultiArrayDimension('data', 1, 4)]
             layout = MultiArrayLayout(dim, 0)
-            
+
             if self.ready:
                 kalman_state = [
                         self.position_filter.get_x(),
