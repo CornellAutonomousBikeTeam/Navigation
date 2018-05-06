@@ -10,7 +10,7 @@ from std_msgs.msg import Float32
 import rospy
 import time
 from localization.kalman import KalmanFilter
-from localization.zensor_fusion import SensorFusion
+from localization.sensor_fusion import SensorFusion
 import geometry
 import requestHandler
 from std_msgs.msg import Int32MultiArray
