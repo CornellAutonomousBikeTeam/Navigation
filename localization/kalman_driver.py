@@ -22,9 +22,9 @@ import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib import image
 
-import kalman
-from kalman import KalmanFilter
-from sensor_fusion import SensorFusion
+import localization.kalman
+from localization.kalman import KalmanFilter
+from localization.sensor_fusion import SensorFusion
 from util.sensor_data import SensorData, GPSData, BikeData
 from util.location import global_to_local
 from util.gmaps_plot import GMapsPlot
@@ -34,8 +34,11 @@ from util.constants import BIKE_LENGTH
 
 def compute_retro(sensors, dt=0.01, filter_type='SF'):
     # Get start and end time.
-    start_time = min(sensors.gps.timestamp[0], sensors.bike.timestamp[0])
-    end_time = min(sensors.gps.timestamp[-1], sensors.bike.timestamp[-1])
+    if hasattr(sensors, "bike"):
+        start_time = min(sensors.gps.timestamp[0], sensors.bike.timestamp[0])
+        end_time = min(sensors.gps.timestamp[-1], sensors.bike.timestamp[-1])
+    else:
+        start_time, end_time = sensors.gps.timestamp[0], sensors.gps.timestamp[-1]
 
     # Keep track of index into sensor arrays so it's easier to know when the simulation time
     # passes though a sensor data point timestamp.
@@ -50,8 +53,8 @@ def compute_retro(sensors, dt=0.01, filter_type='SF'):
     ydot_init = speed_init * np.sin(sensors.gps.yaw[0])
     k1_state = np.matrix([[x_init], [y_init], [xdot_init], [ydot_init]])
 
-    yaw_init = sensors.bike.yaw[0]
-    yawdot_init = sensors.gps.speed[0] * np.tan(sensors.bike.steer[0]) / BIKE_LENGTH
+    yaw_init = sensors.bike.yaw[0] if hasattr(sensors,"bike") else 0
+    yawdot_init = (sensors.gps.speed[0] * np.tan(sensors.bike.steer[0]) / BIKE_LENGTH) if hasattr(sensors,"bike") else 0
     k2_state = np.matrix([[yaw_init], [yawdot_init]])
 
     # State estimate covariance matrix.

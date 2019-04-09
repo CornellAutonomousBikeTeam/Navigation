@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
-import localization
+import localization.kalman
+import localization.kalman_driver
 import util
 
 
@@ -25,7 +26,8 @@ def localize():
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Navigation main executable.')
-    parser.add_argument('action')
+    parser.add_argument('action',
+            help='Which command; possible choices are localize-retro, localize-compare-retro')
     parser.add_argument('--gps-file')
     parser.add_argument('--bike-file')
     args = parser.parse_args()
@@ -40,4 +42,4 @@ if __name__ == '__main__':
         localize()
 
     else:
-        print 'command "{}" not recognized'.format(args.action)
+        print('command "{}" not recognized'.format(args.action))
