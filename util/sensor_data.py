@@ -41,7 +41,7 @@ class SensorData:
             csv_reader = list(csv.reader(gps_file, delimiter=','))[1:]
 
             for i, row in enumerate(csv_reader):
-            	x, y = global_to_local(float(row[2]), float(row[3]))
+                x, y = global_to_local(float(row[2]), float(row[3]))
                 yaw = align_radians(-float(row[9]) * np.pi / 180. + np.pi / 2)
                 speed = float(row[10])
                 timestamp = float(row[0]) / 1.e9
@@ -49,7 +49,7 @@ class SensorData:
                 # Remove outliers.
                 if (np.linalg.norm([x, y]) > GPS_RANGE_THRESHOLD or
                         speed > GPS_SPEED_THRESHOLD):
-                    print 'ignoring outlier gps[{}] = ({}, {})'.format(i, x, y)
+                    print('ignoring outlier gps[{}] = ({}, {})'.format(i, x, y))
                     continue
 
                 x_data.append(x)

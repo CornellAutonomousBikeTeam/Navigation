@@ -41,6 +41,11 @@ class SensorFusion:
     def update(self, dt, gps_sensor=None, bike_sensor=None):
         if bike_sensor is not None:
             self.speed += self.bike_speed_gain * (bike_sensor.speed - self.speed)
+
+            # Reject small velocities
+            if bike_sensor.speed < 0.05: # "epsilon" for the bike sensor
+                self.speed = 0
+
             # if bike_sensor.timestamp < 55:
             self.yaw += self.bike_yaw_gain * dist_radians(bike_sensor.yaw, self.yaw)
             self.yawdot = self.speed * np.tan(bike_sensor.steer) / BIKE_LENGTH
@@ -70,3 +75,13 @@ class SensorFusion:
         self.yaw += dt * self.yawdot
         self.x += dt * self.speed * cos(self.yaw)
         self.y += dt * self.speed * sin(self.yaw)
+
+    def reset(self):
+        "Resets the internal state of the sensor fusion component."
+        self.gps_last_x = None
+        self.gps_last_y = None
+        self.x      = 0
+        self.y      = 0
+        self.speed  = 0
+        self.yaw    = 0
+        self.yawdot = 0
