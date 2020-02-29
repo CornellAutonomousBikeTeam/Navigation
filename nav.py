@@ -203,8 +203,8 @@ class Nav(object):
         jj = path[0][1]
         kk = path[1][0]
         ll = path[1][1]
-        self.debug_info = ("SD {:.3f}, DC {:.3f}, AD {:.3f}, AC {:.3f}, NTC {:.3f} ({:.1f},{:.1f})-({:.1f},{:.1f})"
-            .format(signed_dist, distance_contribution, angle_diff, angle_contribution,
+        self.debug_info = ("@({:.1f},{:.1f}) angle {:.1f}/{:.1f} SD {:.3f}, DC {:.3f}, AD {:.3f}, AC {:.3f}, NTC {:.3f} ({:.1f},{:.1f})-({:.1f},{:.1f})"
+            .format(bike.xB, bike.yB, (180/math.pi)*corrected_bike_psi, (180/math.pi)*path_angle, signed_dist, distance_contribution, (180/math.pi)*angle_diff, angle_contribution,
                 next_turn_contribution, path[0][0], path[0][1], path[1][0],
                 path[1][1]))
         if DEBUG_PRINT_CONTRIBS:

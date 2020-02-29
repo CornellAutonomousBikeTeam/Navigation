@@ -29,7 +29,7 @@ OUTLIER_THRESHOLD = 1000 # 1km from origin
 class Kalman(object):
     def __init__(self):
         self.ready = False
-        self.last_timestamp = None
+        self.last_timestamp = 0
 
         # TODO: shouldn't need this
         self.gps_yaw = None
@@ -70,17 +70,11 @@ class Kalman(object):
         latitude = data.data[0] # In degrees
         longitude = data.data[1]
 
-        # uncomment if getting velocity from gps
-        #self.velocity = [data.data[8]]
-
-        # uncomment if getting yaw from gps
-        #self.yaw = [np.deg2rad(data.data[7])]
-
         # Converts lat long to x,y using FIXED origin
         x, y = global_to_local(float(latitude), float(longitude))
 
-        if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
-            return
+        #if abs(x) > OUTLIER_THRESHOLD or abs(y) > OUTLIER_THRESHOLD:
+            # return
 
         self.gps_speed = data.data[8]
         self.gps_yaw = np.deg2rad(data.data[7])
@@ -114,16 +108,6 @@ class Kalman(object):
         layout = MultiArrayLayout(dim, 0)
 
         self.pub_debug.publish(layout, gps_debug_state)
-
-        if not self.ready:
-            # TODO: don't assume initial xdot and ydot are zero
-            self.k1_state = np.matrix([[x], [y], [0], [0]])
-            self.k2_state = np.matrix([[self.gps_yaw], [0]])
-            self.ready = True
-            self.last_timestamp = timestamp
-
-        delta_time = timestamp - self.last_timestamp
-        self.last_timestamp = timestamp
 
         gps_sensor_data = GPSData(
                 x           = x,

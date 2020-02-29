@@ -35,7 +35,7 @@ except ImportError:
 		from matplotlib.patches import Wedge, PathPatch, Circle
 
 		# Use a different graphics backend and function for OS X
-		if sys.platform == "darwin":
+                if sys.platform == "darwin":
 			matplotlib.use("TkAgg")
 			get_loop_function = lambda: loop_matplotlib
 		else:
