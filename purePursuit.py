@@ -14,6 +14,7 @@ reading SBP messages from a serial port, decoding BASELINE_NED messages and
 printing them out.
 """
 
+from path_following.point_follower import PointFollower
 from sbp2.pyserial_driver import PySerialDriver
 from sbp2.handler import Handler
 from sbp2.framer import Framer
@@ -38,10 +39,10 @@ def bike_state_callback(data):
 def get_waypoints():
     return [(0, 0), (40, 15), (30, 50), (50, 50)]
 
-def get_target_heading(planner, x, y, heading):
-    # TODO: figure out how to use the pp_path_planner and the information
-    # we get from ROS to get a heading and speed in the appropriate format
-    pass
+def get_nav_instr(planner, follower, loc, heading):
+    planner.update_lookahead(loc)
+    follow_point = planner.get_lookahead()
+    return follower.get_nav_command(loc, heading, follow_point)
 
 def main():
     rospy.init_node("nav_instr")
@@ -50,6 +51,7 @@ def main():
     tan_pub = rospy.Publisher('degrees', Float32, queue_size=10)
     waypoints = get_waypoints()
     pp_path_planner = PPPathPlanner(waypoints, lookahead_dist=10, max_lookahead_speed=None)
+    point_follower = PointFollower()
     # Open a connection to Piksi using the default baud rate (1Mbaud)
     with PySerialDriver("/dev/ttyUSB0", baud=115200) as driver:
         with Handler(Framer(driver.read, None, verbose=True)) as source:
@@ -64,13 +66,9 @@ def main():
                         real_y = math.cos(roll)*msg_y - math.sin(roll)*msg_z
                         real_z = math.sin(roll)*msg_y + math.cos(roll)*msg_z
                         tanangle = math.atan2(real_y,real_x)
-                        degrees =math.degrees(tanangle)
+                        degrees = math.degrees(tanangle)
                         # P controller
-                        target_heading = get_target_heading(pp_path_planner, real_x, real_y, tanangle)
-                        angle_diff = target_heading - tanangle
-                        if abs(angle_diff) > math.pi:
-                            angle_diff -= math.copysign(2*math.pi, angle_diff)
-                        nav_instr = angle_diff
+                        nav_instr = get_nav_instr(pp_path_planner, point_follower, (real_x, real_y), tanangle)
                         if nav_instr > MAX_ANG:
                             nav_instr = MAX_ANG
                         elif nav_instr < -MAX_ANG:
@@ -78,10 +76,6 @@ def main():
                         nav_pub.publish(nav_instr)
                         tan_pub.publish(degrees)
                         print(degrees)
-                    #i"i"for msg, metadata in source.filter(SBP_MSG_BASELINE_NED):
-                    #    # Print out the N, E, D coordinates of the baseline
-                    #    print("%.4f,%.4f,%.4f" % (msg.n * 1e-3, msg.e * 1e-3,
-#                                                  msg.d * 1e-3))
                 except KeyboardInterrupt:
                     pass
 

@@ -87,6 +87,10 @@ class PPPathPlanner:
     def get_lookahead(self):
         return self.lookahead_point
 
+    def get_best_angle(self, robot_loc):
+        self.update_lookahead(robot_loc)
+        
+
 
 def init_paths(waypoints):
     """ Initializes paths from input waypoints """
