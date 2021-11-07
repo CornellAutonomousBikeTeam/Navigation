@@ -48,13 +48,12 @@ class Bike:
         return self.speed, self.yaw
 
     def update_yaw(self):
-        """Returns the pair (speed, yaw_dot)"""
         follow_x, follow_y = self.lookahead_point
         reverse_x, reverse_y = self.get_reverse_point(follow_x, follow_y)
         curvature = get_curvature(follow_x, follow_y, self.pos[0], self.pos[1], reverse_x, reverse_y)
         sign = -math.sin(self.heading - math.atan2(follow_y - self.pos[1], follow_x - self.pos[0]))
         # just shake up the yaw a bit if follow_point is right behind/ahead of self, to check
-        self.yaw = math.copysign(self.YAW_ADJUST_SPEED * curvature, sign) if sign ** 2 > 0.0000000001 else 0.01
+        self.yaw = math.copysign(self.YAW_ADJUST_SPEED * curvature, sign) if sign ** 2 > 1e-10 else 0.01
 
     def get_reverse_point(self, follow_x, follow_y):
         dx = follow_x - self.pos[0]
@@ -85,7 +84,7 @@ class Bike:
 
 
 def get_curvature(x1, y1, x2, y2, x3, y3):
-    very_small = 0.00000000000000000001
+    very_small = 1e-20
     x1_minus_x2 = x1 - x2
     if x1_minus_x2 == 0:
         x1_minus_x2 = very_small  # avoids division by zero
